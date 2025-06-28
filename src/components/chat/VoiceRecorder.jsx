@@ -19,6 +19,14 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
   const analyserRef = useRef(null);
   const audioRef = useRef(null);
 
+  // CRITICAL FIX: Reset timer when recording starts
+  useEffect(() => {
+    if (isRecording && !recordedBlob) {
+      setRecordingTime(0);
+      startRecording();
+    }
+  }, [isRecording]);
+
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -57,7 +65,7 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
       const dataArray = new Uint8Array(bufferLength);
 
       const updateAudioLevel = () => {
-        if (analyserRef.current && !isPaused) {
+        if (analyserRef.current && !isPaused && isRecording) {
           analyserRef.current.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / bufferLength;
           setAudioLevel(average);
@@ -82,18 +90,31 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
         setRecordedBlob(audioBlob);
         stream.getTracks().forEach(track => track.stop());
         setAudioLevel(0);
+        
+        // Stop timer when recording stops
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
       };
 
       mediaRecorderRef.current.start(100); // Collect data every 100ms
-      onStartRecording();
       updateAudioLevel();
 
-      // Start timer
+      // CRITICAL FIX: Start timer immediately and ensure it runs
+      setRecordingTime(0);
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          console.log('Recording time:', newTime); // Debug log
+          return newTime;
+        });
       }, 1000);
 
+      console.log('Recording started, timer started'); // Debug log
+
     } catch (error) {
+      console.error('Recording start error:', error);
       toast({
         title: "Microphone Access Denied",
         description: "Please allow microphone access to record voice messages",
@@ -103,11 +124,14 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
   };
 
   const stopRecording = () => {
+    console.log('Stopping recording'); // Debug log
+    
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
@@ -120,6 +144,7 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
       setIsPaused(true);
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     }
   };
@@ -184,6 +209,7 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   };
 
@@ -200,7 +226,7 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
         type="button"
         variant="ghost"
         size="icon"
-        onClick={startRecording}
+        onClick={onStartRecording}
       >
         <Mic className="w-4 h-4" />
       </Button>
@@ -233,8 +259,8 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
           ))}
         </div>
 
-        {/* Recording Time */}
-        <span className="text-sm font-medium text-destructive">
+        {/* Recording Time - FIXED: Always show current time */}
+        <span className="text-sm font-medium text-destructive min-w-[50px]">
           {formatTime(recordingTime)}
         </span>
 
