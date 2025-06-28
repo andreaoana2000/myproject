@@ -91,6 +91,116 @@
     --input: 220 30% 18%;
     --ring: 217 91% 60%;
   }
+
+  /* NEW: Gaming Red Theme - Inspired by the screenshot */
+  .theme-gaming-red {
+    --background: 0 20% 8%;
+    --foreground: 0 5% 96%;
+    --card: 0 30% 12%;
+    --card-foreground: 0 5% 96%;
+    --popover: 0 30% 12%;
+    --popover-foreground: 0 5% 96%;
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 9% 89%;
+    --secondary: 0 20% 18%;
+    --secondary-foreground: 0 5% 96%;
+    --muted: 0 20% 18%;
+    --muted-foreground: 0 5% 60%;
+    --accent: 0 20% 18%;
+    --accent-foreground: 0 5% 96%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 0 5% 96%;
+    --border: 0 30% 22%;
+    --input: 0 30% 22%;
+    --ring: 0 84% 60%;
+  }
+
+  /* Gaming Red Theme Enhancements */
+  .theme-gaming-red {
+    /* Add subtle red glow effects */
+    --glow-primary: 0 84% 60%;
+    --glow-secondary: 0 60% 40%;
+  }
+
+  .theme-gaming-red .bg-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(0 25% 10%) 100%);
+    border: 1px solid hsl(0 40% 25%);
+  }
+
+  .theme-gaming-red .bg-primary {
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 70% 50%) 100%);
+    box-shadow: 0 0 20px hsla(0 84% 60% / 0.3);
+  }
+
+  .theme-gaming-red .bg-primary:hover {
+    background: linear-gradient(135deg, hsl(0 84% 65%) 0%, hsl(0 70% 55%) 100%);
+    box-shadow: 0 0 25px hsla(0 84% 60% / 0.4);
+  }
+
+  .theme-gaming-red .border-border {
+    border-color: hsl(0 40% 25%);
+  }
+
+  .theme-gaming-red .text-primary {
+    color: hsl(0 84% 65%);
+    text-shadow: 0 0 10px hsla(0 84% 60% / 0.3);
+  }
+
+  /* Gaming Red Theme - Header styling */
+  .theme-gaming-red .bg-card\/50 {
+    background: linear-gradient(135deg, hsla(0 30% 12% / 0.8) 0%, hsla(0 25% 10% / 0.9) 100%);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid hsl(0 40% 25%);
+  }
+
+  /* Gaming Red Theme - Message bubbles */
+  .theme-gaming-red .message-bubble {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(0 25% 10%) 100%);
+    border: 1px solid hsl(0 40% 25%);
+    box-shadow: 0 4px 12px hsla(0 0% 0% / 0.3);
+  }
+
+  /* Gaming Red Theme - Buttons */
+  .theme-gaming-red .btn-enhanced {
+    background: linear-gradient(135deg, hsl(0 30% 15%) 0%, hsl(0 25% 12%) 100%);
+    border: 1px solid hsl(0 40% 25%);
+    transition: all 0.3s ease;
+  }
+
+  .theme-gaming-red .btn-enhanced:hover {
+    background: linear-gradient(135deg, hsl(0 40% 20%) 0%, hsl(0 35% 17%) 100%);
+    border-color: hsl(0 60% 35%);
+    box-shadow: 0 0 15px hsla(0 84% 60% / 0.2);
+  }
+
+  /* Gaming Red Theme - Scrollbars */
+  .theme-gaming-red .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 70% 50%) 100%);
+    border-radius: 4px;
+  }
+
+  .theme-gaming-red .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, hsl(0 84% 65%) 0%, hsl(0 70% 55%) 100%);
+  }
+
+  /* Gaming Red Theme - Input focus */
+  .theme-gaming-red .enhanced-input:focus {
+    border-color: hsl(0 84% 60%);
+    box-shadow: 0 0 0 3px hsla(0 84% 60% / 0.1), 0 0 15px hsla(0 84% 60% / 0.2);
+  }
+
+  /* Gaming Red Theme - Glow effects for special elements */
+  .theme-gaming-red .shadow-glow {
+    box-shadow: 0 0 20px hsla(0 84% 60% / 0.3);
+  }
+
+  .theme-gaming-red .shadow-glow-hover:hover {
+    box-shadow: 0 0 30px hsla(0 84% 60% / 0.5);
+  }
+
+  .theme-gaming-red .text-glow {
+    text-shadow: 0 0 10px hsla(0 84% 60% / 0.5);
+  }
 }
 
 @layer base {

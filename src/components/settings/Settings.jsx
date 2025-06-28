@@ -345,11 +345,23 @@ export default function Settings() {
                   <Button
                     key={key}
                     variant={currentTheme === key ? "default" : "outline"}
-                    className="justify-start h-auto p-3"
-                    onClick={() => switchTheme(key)}
+                    className="justify-start h-auto p-4"
+                    onClick={() => {
+                      switchTheme(key);
+                      toast({
+                        title: "Theme Changed! 🎨",
+                        description: `Switched to ${theme.name} theme`
+                      });
+                    }}
                   >
-                    <span className="text-lg mr-3">{theme.icon}</span>
-                    <span>{theme.name}</span>
+                    <span className="text-2xl mr-3">{theme.icon}</span>
+                    <div className="text-left">
+                      <div className="font-medium">{theme.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {key === 'dark-blue' && 'Classic blue theme with modern design'}
+                        {key === 'gaming-red' && 'Gaming-inspired red theme with glow effects'}
+                      </div>
+                    </div>
                   </Button>
                 ))}
               </div>

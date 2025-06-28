@@ -7,21 +7,37 @@ export const themes = {
     name: 'Dark Blue',
     class: 'theme-dark-blue',
     icon: '🌊'
+  },
+  'gaming-red': {
+    name: 'Gaming Red',
+    class: 'theme-gaming-red',
+    icon: '🎮'
   }
 };
 
 export function ThemeProvider({ children }) {
-  const [currentTheme, setCurrentTheme] = useState('dark-blue');
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const saved = localStorage.getItem('securechat-theme');
+    return saved || 'dark-blue';
+  });
 
   useEffect(() => {
-    // Always use dark blue theme
     const root = document.documentElement;
-    root.classList.add('theme-dark-blue');
-  }, []);
+    
+    // Remove all theme classes
+    Object.values(themes).forEach(theme => {
+      root.classList.remove(theme.class);
+    });
+    
+    // Add current theme class
+    root.classList.add(themes[currentTheme].class);
+    
+    // Save to localStorage
+    localStorage.setItem('securechat-theme', currentTheme);
+  }, [currentTheme]);
 
   const switchTheme = (themeKey) => {
-    // Only allow dark-blue theme
-    if (themeKey === 'dark-blue') {
+    if (themes[themeKey]) {
       setCurrentTheme(themeKey);
     }
   };
