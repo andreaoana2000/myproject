@@ -1,0 +1,412 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 100% 6%;
+    --foreground: 220 5% 96%;
+    --card: 220 50% 8%;
+    --card-foreground: 220 5% 96%;
+    --popover: 220 50% 8%;
+    --popover-foreground: 220 5% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 9% 89%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 220 5% 96%;
+    --muted: 220 30% 15%;
+    --muted-foreground: 220 5% 60%;
+    --accent: 220 30% 15%;
+    --accent-foreground: 220 5% 96%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 220 5% 96%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 100% 6%;
+    --foreground: 220 5% 96%;
+    --card: 220 50% 8%;
+    --card-foreground: 220 5% 96%;
+    --popover: 220 50% 8%;
+    --popover-foreground: 220 5% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 9% 89%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 220 5% 96%;
+    --muted: 220 30% 15%;
+    --muted-foreground: 220 5% 60%;
+    --accent: 220 30% 15%;
+    --accent-foreground: 220 5% 96%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 220 5% 96%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 217 91% 60%;
+  }
+
+  .theme-dark-green {
+    --background: 150 100% 6%;
+    --foreground: 150 5% 96%;
+    --card: 150 50% 8%;
+    --card-foreground: 150 5% 96%;
+    --popover: 150 50% 8%;
+    --popover-foreground: 150 5% 96%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 150 9% 89%;
+    --secondary: 150 30% 15%;
+    --secondary-foreground: 150 5% 96%;
+    --muted: 150 30% 15%;
+    --muted-foreground: 150 5% 60%;
+    --accent: 150 30% 15%;
+    --accent-foreground: 150 5% 96%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 150 5% 96%;
+    --border: 150 30% 18%;
+    --input: 150 30% 18%;
+    --ring: 142 76% 36%;
+  }
+
+  .theme-dark-blue {
+    --background: 220 100% 6%;
+    --foreground: 220 5% 96%;
+    --card: 220 50% 8%;
+    --card-foreground: 220 5% 96%;
+    --popover: 220 50% 8%;
+    --popover-foreground: 220 5% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 9% 89%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 220 5% 96%;
+    --muted: 220 30% 15%;
+    --muted-foreground: 220 5% 60%;
+    --accent: 220 30% 15%;
+    --accent-foreground: 220 5% 96%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 220 5% 96%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  /* CRITICAL FIX: Ensure proper emoji font rendering across all browsers */
+  .emoji, 
+  [data-emoji], 
+  .emoji-text,
+  span[style*="emoji"] {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+    font-variant-emoji: emoji !important;
+    text-rendering: optimizeQuality !important;
+    -webkit-font-feature-settings: "liga" on, "clig" on, "calt" on !important;
+    font-feature-settings: "liga" on, "clig" on, "calt" on !important;
+  }
+  
+  /* Force emoji rendering for all potential emoji containers */
+  button span,
+  .reaction span,
+  .emoji-picker span,
+  .message-reactions span {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+    font-variant-emoji: emoji !important;
+    text-rendering: optimizeQuality !important;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Emoji-specific utility classes */
+  .emoji-font {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+    font-variant-emoji: emoji !important;
+    text-rendering: optimizeQuality !important;
+  }
+  
+  .emoji-display {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: none;
+  }
+}
+
+/* Custom animations */
+@keyframes typing {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.typing-indicator {
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Message animations */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-enter {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Voice note waveform */
+@keyframes waveform {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.waveform-bar {
+  animation: waveform 1s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+.waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+.waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+.waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+
+/* Styled message content */
+.styled-message strong {
+  @apply font-bold text-primary;
+}
+
+.styled-message em {
+  @apply italic text-foreground/90;
+}
+
+.styled-message code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono border;
+}
+
+.styled-message pre {
+  @apply bg-muted p-3 rounded-lg border overflow-x-auto my-2;
+}
+
+.styled-message pre code {
+  @apply bg-transparent p-0 border-0;
+}
+
+/* Gradient text effects */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientShift 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced button hover effects */
+.btn-enhanced {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+.btn-enhanced::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/40 opacity-0 transition-opacity duration-300;
+}
+
+.btn-enhanced:hover::before {
+  @apply opacity-100;
+}
+
+/* Glassmorphism effects */
+.glass-effect {
+  @apply backdrop-blur-md bg-white/10 border border-white/20;
+}
+
+.glass-effect-dark {
+  @apply backdrop-blur-md bg-black/10 border border-white/10;
+}
+
+/* Enhanced shadows */
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(var(--primary), 0.3);
+}
+
+.shadow-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(var(--primary), 0.5);
+}
+
+/* Text styling animations */
+@keyframes textGlow {
+  0%, 100% { text-shadow: 0 0 5px rgba(var(--primary), 0.5); }
+  50% { text-shadow: 0 0 20px rgba(var(--primary), 0.8); }
+}
+
+.text-glow {
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+/* Enhanced scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-muted/30 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-primary/50 rounded-full hover:bg-primary/70;
+}
+
+/* Message bubble enhancements */
+.message-bubble {
+  @apply relative transition-all duration-300;
+}
+
+.message-bubble::before {
+  content: '';
+  @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300;
+  background: linear-gradient(45deg, transparent, rgba(var(--primary), 0.1), transparent);
+}
+
+.message-bubble:hover::before {
+  @apply opacity-100;
+}
+
+/* Enhanced input focus effects */
+.enhanced-input {
+  @apply transition-all duration-300;
+}
+
+.enhanced-input:focus {
+  @apply ring-2 ring-primary/50 border-primary/50;
+  box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
+}
+
+/* CRITICAL: Force emoji rendering in all reaction elements */
+.message-reactions button span,
+.reaction-button span,
+.emoji-reaction span,
+[class*="reaction"] span {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+  font-variant-emoji: emoji !important;
+  text-rendering: optimizeQuality !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+/* Ensure emoji buttons render properly */
+button[class*="emoji"] span,
+button[data-emoji] span,
+.emoji-picker button span {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+  font-variant-emoji: emoji !important;
+  text-rendering: optimizeQuality !important;
+  font-size: inherit !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+}
+
+/* CRITICAL: Emoji picker positioning and z-index fixes */
+.emoji-picker-container {
+  position: relative;
+  z-index: 9999;
+}
+
+.emoji-picker-popup {
+  position: absolute !important;
+  z-index: 9999 !important;
+  bottom: 100% !important;
+  left: 0 !important;
+  margin-bottom: 8px !important;
+}
+
+/* Ensure emoji picker appears above all other content */
+.emoji-picker-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9998 !important;
+  pointer-events: auto !important;
+}
+
+/* Status page specific emoji picker positioning */
+.status-emoji-picker {
+  position: absolute !important;
+  bottom: calc(100% + 8px) !important;
+  left: 0 !important;
+  z-index: 9999 !important;
+}
+
+/* CRITICAL: Status viewer button fixes */
+.status-viewer-buttons {
+  pointer-events: auto !important;
+  z-index: 30 !important;
+}
+
+.status-viewer-buttons button {
+  pointer-events: auto !important;
+  z-index: 31 !important;
+}
+
+.status-viewer-reactions {
+  pointer-events: auto !important;
+  z-index: 40 !important;
+}
+
+.status-viewer-reactions button {
+  pointer-events: auto !important;
+  z-index: 41 !important;
+}
+
+/* Ensure status viewer overlay doesn't block buttons */
+.status-viewer-overlay {
+  pointer-events: none !important;
+}
+
+/* Status viewer action area should allow clicks */
+.status-action-area {
+  pointer-events: auto !important;
+  z-index: 20 !important;
+}
+
+.status-action-area * {
+  pointer-events: auto !important;
+}
