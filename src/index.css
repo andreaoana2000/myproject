@@ -212,16 +212,30 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   
-  /* CRITICAL FIX: Ensure proper emoji font rendering across all browsers */
+  /* CRITICAL FIX: Enhanced emoji font rendering across all browsers and contexts */
   .emoji, 
   [data-emoji], 
   .emoji-text,
-  span[style*="emoji"] {
+  .emoji-display,
+  .emoji-reaction,
+  .reaction-emoji,
+  span[style*="emoji"],
+  .message-reactions span,
+  .reaction-button span,
+  button[class*="emoji"] span,
+  button[data-emoji] span,
+  .emoji-picker button span {
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
     font-variant-emoji: emoji !important;
     text-rendering: optimizeQuality !important;
     -webkit-font-feature-settings: "liga" on, "clig" on, "calt" on !important;
     font-feature-settings: "liga" on, "clig" on, "calt" on !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
   }
   
   /* Force emoji rendering for all potential emoji containers */
@@ -244,7 +258,7 @@
     display: none;
   }
   
-  /* Emoji-specific utility classes */
+  /* Enhanced emoji-specific utility classes */
   .emoji-font {
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
     font-variant-emoji: emoji !important;
@@ -252,12 +266,15 @@
   }
   
   .emoji-display {
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 1;
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: none;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    text-decoration: none !important;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+    font-variant-emoji: emoji !important;
+    text-rendering: optimizeQuality !important;
   }
 }
 
@@ -427,20 +444,25 @@
   box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
 }
 
-/* CRITICAL: Force emoji rendering in all reaction elements */
+/* CRITICAL: Force emoji rendering in all reaction elements with enhanced specificity */
 .message-reactions button span,
 .reaction-button span,
 .emoji-reaction span,
-[class*="reaction"] span {
+.emoji-display,
+[class*="reaction"] span,
+[class*="emoji"] span {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
   font-variant-emoji: emoji !important;
   text-rendering: optimizeQuality !important;
   display: inline-block !important;
   vertical-align: middle !important;
   line-height: 1 !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  text-decoration: none !important;
 }
 
-/* Ensure emoji buttons render properly */
+/* Ensure emoji buttons render properly with enhanced styling */
 button[class*="emoji"] span,
 button[data-emoji] span,
 .emoji-picker button span {
@@ -519,4 +541,30 @@ button[data-emoji] span,
 
 .status-action-area * {
   pointer-events: auto !important;
+}
+
+/* CRITICAL: Enhanced emoji reaction display fixes */
+.message-reactions .emoji-display,
+.reaction-emoji,
+.emoji-reaction {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+  font-variant-emoji: emoji !important;
+  text-rendering: optimizeQuality !important;
+  -webkit-font-feature-settings: "liga" on, "clig" on, "calt" on !important;
+  font-feature-settings: "liga" on, "clig" on, "calt" on !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+/* Force proper emoji rendering in all contexts */
+* [style*="emoji"],
+* .emoji-display,
+* .emoji-reaction {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+  font-variant-emoji: emoji !important;
+  text-rendering: optimizeQuality !important;
 }

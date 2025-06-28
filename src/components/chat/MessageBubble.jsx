@@ -110,12 +110,11 @@ export default function MessageBubble({
 
   // CRITICAL FIX: Ensure emoji is properly handled and displayed
   const handleReaction = (emoji) => {
-    // Ensure we're working with a proper emoji string
-    const cleanEmoji = String(emoji).trim();
-    console.log('Reacting with emoji:', cleanEmoji, 'Type:', typeof cleanEmoji); // Debug log
+    // FIXED: Ensure we're working with the actual emoji string, not converting it
+    console.log('Reacting with emoji:', emoji, 'Type:', typeof emoji); // Debug log
     
-    if (onReact && cleanEmoji) {
-      onReact(message.id, cleanEmoji);
+    if (onReact && emoji) {
+      onReact(message.id, emoji);
     }
     setShowReactions(false);
   };
@@ -174,19 +173,20 @@ export default function MessageBubble({
     }
   };
 
-  // FIXED: Proper emoji array with Unicode emojis
+  // FIXED: Proper emoji array with actual Unicode emojis
   const quickReactions = ['❤️', '👍', '😂', '😮', '😢', '😡'];
 
-  // Helper function to ensure proper emoji rendering
+  // CRITICAL FIX: Enhanced emoji rendering function
   const renderEmoji = (emoji) => {
     // Ensure we have a valid emoji string
     const emojiStr = String(emoji || '').trim();
     
-    // If it's empty or looks like a number, return a fallback
-    if (!emojiStr || /^\d+$/.test(emojiStr)) {
+    // If it's empty, return a fallback
+    if (!emojiStr) {
       return '👍'; // Fallback emoji
     }
     
+    // Return the emoji as-is (don't modify it)
     return emojiStr;
   };
 
@@ -375,11 +375,11 @@ export default function MessageBubble({
           >
             {renderMessageContent()}
 
-            {/* Message Reactions - CRITICAL FIX: Proper emoji rendering with fallbacks */}
+            {/* Message Reactions - CRITICAL FIX: Proper emoji rendering with enhanced display */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {message.reactions.map((reaction, index) => {
-                  // CRITICAL: Ensure proper emoji handling
+                  // CRITICAL: Ensure proper emoji handling and display
                   const displayEmoji = renderEmoji(reaction.emoji);
                   const reactionCount = reaction.count || 1;
                   const isUserReacted = reaction.users && reaction.users.includes(user.id);
@@ -405,14 +405,19 @@ export default function MessageBubble({
                       }`}
                       onClick={() => handleReaction(reaction.emoji)}
                     >
-                      {/* CRITICAL FIX: Proper emoji rendering with comprehensive font stack */}
+                      {/* CRITICAL FIX: Enhanced emoji rendering with proper font stack and styling */}
                       <span 
-                        className="text-sm leading-none select-none inline-block" 
+                        className="emoji-display text-sm leading-none select-none inline-block" 
                         style={{ 
                           fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
                           fontSize: '14px',
                           fontVariantEmoji: 'emoji',
-                          textRendering: 'optimizeQuality'
+                          textRendering: 'optimizeQuality',
+                          fontWeight: 'normal',
+                          fontStyle: 'normal',
+                          textDecoration: 'none',
+                          lineHeight: '1',
+                          verticalAlign: 'middle'
                         }}
                       >
                         {displayEmoji}
@@ -467,7 +472,7 @@ export default function MessageBubble({
                 <Heart className="w-3 h-3" />
               </Button>
 
-              {/* Quick Reactions - FIXED: Proper emoji buttons with enhanced rendering */}
+              {/* Quick Reactions - FIXED: Enhanced emoji buttons with proper rendering */}
               {showReactions && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -489,12 +494,17 @@ export default function MessageBubble({
                       }}
                     >
                       <span 
-                        className="text-lg leading-none select-none inline-block"
+                        className="emoji-display text-lg leading-none select-none inline-block"
                         style={{ 
                           fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
                           fontSize: '16px',
                           fontVariantEmoji: 'emoji',
-                          textRendering: 'optimizeQuality'
+                          textRendering: 'optimizeQuality',
+                          fontWeight: 'normal',
+                          fontStyle: 'normal',
+                          textDecoration: 'none',
+                          lineHeight: '1',
+                          verticalAlign: 'middle'
                         }}
                       >
                         {emoji}
