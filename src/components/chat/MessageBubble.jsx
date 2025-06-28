@@ -108,10 +108,9 @@ export default function MessageBubble({
     }
   };
 
-  // CRITICAL FIX: Ensure emoji is properly handled and displayed
+  // CRITICAL FIX: Proper emoji handling without conversion
   const handleReaction = (emoji) => {
-    // FIXED: Ensure we're working with the actual emoji string, not converting it
-    console.log('Reacting with emoji:', emoji, 'Type:', typeof emoji); // Debug log
+    console.log('Reacting with emoji:', emoji, 'Type:', typeof emoji, 'Code:', emoji.charCodeAt ? emoji.charCodeAt(0) : 'N/A');
     
     if (onReact && emoji) {
       onReact(message.id, emoji);
@@ -173,21 +172,29 @@ export default function MessageBubble({
     }
   };
 
-  // FIXED: Proper emoji array with actual Unicode emojis
-  const quickReactions = ['❤️', '👍', '😂', '😮', '😢', '😡'];
+  // CRITICAL FIX: Use actual Unicode emoji characters
+  const quickReactions = [
+    '\u2764\uFE0F', // ❤️ Red Heart
+    '\uD83D\uDC4D', // 👍 Thumbs Up
+    '\uD83D\uDE02', // 😂 Face with Tears of Joy
+    '\uD83D\uDE2E', // 😮 Face with Open Mouth
+    '\uD83D\uDE22', // 😢 Crying Face
+    '\uD83D\uDE21'  // 😡 Pouting Face
+  ];
 
   // CRITICAL FIX: Enhanced emoji rendering function
   const renderEmoji = (emoji) => {
-    // Ensure we have a valid emoji string
-    const emojiStr = String(emoji || '').trim();
-    
-    // If it's empty, return a fallback
-    if (!emojiStr) {
-      return '👍'; // Fallback emoji
+    // Return the emoji exactly as provided
+    if (!emoji) {
+      return '\uD83D\uDC4D'; // 👍 fallback
     }
     
-    // Return the emoji as-is (don't modify it)
-    return emojiStr;
+    // If it's a number or invalid, return fallback
+    if (typeof emoji === 'number' || /^\d+$/.test(String(emoji))) {
+      return '\uD83D\uDC4D'; // 👍 fallback
+    }
+    
+    return String(emoji);
   };
 
   const renderMessageContent = () => {
@@ -375,21 +382,13 @@ export default function MessageBubble({
           >
             {renderMessageContent()}
 
-            {/* Message Reactions - CRITICAL FIX: Proper emoji rendering with enhanced display */}
+            {/* Message Reactions - CRITICAL FIX: Enhanced emoji rendering */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {message.reactions.map((reaction, index) => {
-                  // CRITICAL: Ensure proper emoji handling and display
                   const displayEmoji = renderEmoji(reaction.emoji);
                   const reactionCount = reaction.count || 1;
                   const isUserReacted = reaction.users && reaction.users.includes(user.id);
-                  
-                  console.log('Rendering reaction:', { 
-                    original: reaction.emoji, 
-                    display: displayEmoji, 
-                    count: reactionCount, 
-                    isUserReacted 
-                  });
                   
                   return (
                     <motion.button
@@ -405,19 +404,11 @@ export default function MessageBubble({
                       }`}
                       onClick={() => handleReaction(reaction.emoji)}
                     >
-                      {/* CRITICAL FIX: Enhanced emoji rendering with proper font stack and styling */}
+                      {/* CRITICAL FIX: Direct emoji rendering without conversion */}
                       <span 
-                        className="emoji-display text-sm leading-none select-none inline-block" 
+                        className="emoji-display"
                         style={{ 
-                          fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          fontSize: '14px',
-                          fontVariantEmoji: 'emoji',
-                          textRendering: 'optimizeQuality',
-                          fontWeight: 'normal',
-                          fontStyle: 'normal',
-                          textDecoration: 'none',
-                          lineHeight: '1',
-                          verticalAlign: 'middle'
+                          fontSize: '14px'
                         }}
                       >
                         {displayEmoji}
@@ -472,7 +463,7 @@ export default function MessageBubble({
                 <Heart className="w-3 h-3" />
               </Button>
 
-              {/* Quick Reactions - FIXED: Enhanced emoji buttons with proper rendering */}
+              {/* Quick Reactions - CRITICAL FIX: Enhanced emoji rendering */}
               {showReactions && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -494,17 +485,9 @@ export default function MessageBubble({
                       }}
                     >
                       <span 
-                        className="emoji-display text-lg leading-none select-none inline-block"
+                        className="emoji-display"
                         style={{ 
-                          fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          fontSize: '16px',
-                          fontVariantEmoji: 'emoji',
-                          textRendering: 'optimizeQuality',
-                          fontWeight: 'normal',
-                          fontStyle: 'normal',
-                          textDecoration: 'none',
-                          lineHeight: '1',
-                          verticalAlign: 'middle'
+                          fontSize: '16px'
                         }}
                       >
                         {emoji}
@@ -563,11 +546,18 @@ export default function MessageBubble({
                 <Trash2 className="w-3 h-3" />
               </Button>
             )}
+            {/* CRITICAL FIX: Proper menu button with event handling */}
             <Button
               variant="ghost"
               size="icon"
               className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-              onClick={() => onShowOptions && onShowOptions(message)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onShowOptions) {
+                  onShowOptions(message);
+                }
+              }}
             >
               <MoreHorizontal className="w-3 h-3" />
             </Button>
