@@ -27,7 +27,8 @@ export default function ChannelHeader({
   onToggleNotifications,
   onToggleMute,
   onToggleMembers,
-  onShowChannelInfo
+  onShowChannelInfo,
+  onShowAdvancedSettings
 }) {
   return (
     <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4">
@@ -99,7 +100,6 @@ export default function ChannelHeader({
           <Users className="w-4 h-4" />
         </Button>
         
-        {/* FIXED: Info button that opens channel information */}
         <Button
           variant="ghost"
           size="icon"
@@ -113,11 +113,9 @@ export default function ChannelHeader({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => toast({
-            title: "🚧 Channel Settings",
-            description: "Channel settings aren't implemented yet—but don't worry! You can request them in your next prompt! 🚀"
-          })}
+          onClick={onShowAdvancedSettings}
           className="transition-all duration-200 hover:bg-accent"
+          title="Advanced Channel Settings"
         >
           <Settings className="w-4 h-4" />
         </Button>

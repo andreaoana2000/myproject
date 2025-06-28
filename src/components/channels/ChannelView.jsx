@@ -12,6 +12,7 @@ import ChannelInput from '@/components/channels/ChannelInput';
 import ChannelMembers from '@/components/channels/ChannelMembers';
 import ChannelHeader from '@/components/channels/ChannelHeader';
 import ChannelInfoPanel from '@/components/channels/ChannelInfoPanel';
+import AdvancedChannelSettings from '@/components/channels/AdvancedChannelSettings';
 import { Pin, ArrowUp, X, Reply, Send, PinOff } from 'lucide-react';
 
 export default function ChannelView({ channel, onBack }) {
@@ -33,6 +34,7 @@ export default function ChannelView({ channel, onBack }) {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [showChannelInfo, setShowChannelInfo] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -645,6 +647,49 @@ export default function ChannelView({ channel, onBack }) {
     // For now, we'll just show the toast to confirm it's working
   };
 
+  const handleUpdateChannel = (channelId, updates) => {
+    // Save channel updates to localStorage
+    const savedChannels = localStorage.getItem('securechat-channels');
+    if (savedChannels) {
+      try {
+        const channels = JSON.parse(savedChannels);
+        const updatedChannels = channels.map(c =>
+          c.id === channelId ? { ...c, ...updates } : c
+        );
+        localStorage.setItem('securechat-channels', JSON.stringify(updatedChannels));
+        
+        toast({
+          title: "Channel Updated! ⚙️",
+          description: "Advanced channel settings have been saved"
+        });
+      } catch (error) {
+        console.error('Error updating channel:', error);
+      }
+    }
+  };
+
+  const handleDeleteChannel = (channelId) => {
+    // Handle channel deletion
+    const savedChannels = localStorage.getItem('securechat-channels');
+    if (savedChannels) {
+      try {
+        const channels = JSON.parse(savedChannels);
+        const updatedChannels = channels.filter(c => c.id !== channelId);
+        localStorage.setItem('securechat-channels', JSON.stringify(updatedChannels));
+        
+        toast({
+          title: "Channel Deleted! 🗑️",
+          description: `#${channel.name} has been permanently deleted`
+        });
+        
+        // Navigate back to channels list
+        onBack();
+      } catch (error) {
+        console.error('Error deleting channel:', error);
+      }
+    }
+  };
+
   const filteredMessages = searchQuery 
     ? messages.filter(msg => 
         msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -666,7 +711,7 @@ export default function ChannelView({ channel, onBack }) {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-background via-background to-background/95 relative">
-      {/* FIXED: Channel Header with proper Info button */}
+      {/* FIXED: Channel Header with proper Advanced Settings button */}
       <ChannelHeader
         channel={channel}
         channelMembers={channelMembers}
@@ -680,6 +725,7 @@ export default function ChannelView({ channel, onBack }) {
         onToggleMute={toggleMute}
         onToggleMembers={() => setShowMembers(!showMembers)}
         onShowChannelInfo={() => setShowChannelInfo(true)}
+        onShowAdvancedSettings={() => setShowAdvancedSettings(true)}
       />
 
       {/* Search Bar */}
@@ -927,7 +973,7 @@ export default function ChannelView({ channel, onBack }) {
         onCancel={() => setIsRecording(false)}
       />
 
-      {/* FIXED: Channel Information Panel */}
+      {/* Channel Information Panel */}
       <ChannelInfoPanel
         channel={channel}
         isOpen={showChannelInfo}
@@ -957,6 +1003,15 @@ export default function ChannelView({ channel, onBack }) {
             description: "Opening member management panel..."
           });
         }}
+      />
+
+      {/* Advanced Channel Settings */}
+      <AdvancedChannelSettings
+        channel={channel}
+        isOpen={showAdvancedSettings}
+        onClose={() => setShowAdvancedSettings(false)}
+        onUpdateChannel={handleUpdateChannel}
+        onDeleteChannel={handleDeleteChannel}
       />
     </div>
   );
