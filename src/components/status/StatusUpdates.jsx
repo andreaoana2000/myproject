@@ -22,9 +22,12 @@ export default function StatusUpdates() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showTextStyler, setShowTextStyler] = useState(false);
   const [showStatusOptions, setShowStatusOptions] = useState(null);
+  // NEW: State for status interactions
+  const [statusInteractions, setStatusInteractions] = useState({});
 
   useEffect(() => {
     loadUserStatuses();
+    loadStatusInteractions();
   }, []);
 
   const loadUserStatuses = () => {
@@ -51,9 +54,27 @@ export default function StatusUpdates() {
     }
   };
 
+  // NEW: Load status interactions (likes, replies, shares)
+  const loadStatusInteractions = () => {
+    const saved = localStorage.getItem('securechat-status-interactions');
+    if (saved) {
+      try {
+        setStatusInteractions(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading status interactions:', error);
+      }
+    }
+  };
+
   const saveUserStatuses = (statuses) => {
     localStorage.setItem('securechat-statuses', JSON.stringify(statuses));
     setUserStatuses(statuses);
+  };
+
+  // NEW: Save status interactions
+  const saveStatusInteractions = (interactions) => {
+    localStorage.setItem('securechat-status-interactions', JSON.stringify(interactions));
+    setStatusInteractions(interactions);
   };
 
   const handleCreateStatus = (statusData) => {
@@ -80,6 +101,11 @@ export default function StatusUpdates() {
     const statusToDelete = userStatuses.find(s => s.id === statusId);
     const updatedStatuses = userStatuses.filter(s => s.id !== statusId);
     saveUserStatuses(updatedStatuses);
+    
+    // Also remove interactions for this status
+    const updatedInteractions = { ...statusInteractions };
+    delete updatedInteractions[statusId];
+    saveStatusInteractions(updatedInteractions);
     
     setShowStatusOptions(null);
     
@@ -154,14 +180,113 @@ export default function StatusUpdates() {
     setShowTextStyler(false);
   };
 
+  // FIXED: Proper status reply handling with persistence
   const handleStatusReply = (status, replyText) => {
+    const statusId = status.id;
+    const replyId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newReply = {
+      id: replyId,
+      userId: user.id,
+      username: user.username,
+      avatar: user.avatar,
+      content: replyText,
+      timestamp: new Date().toISOString()
+    };
+
+    // Update interactions
+    const updatedInteractions = {
+      ...statusInteractions,
+      [statusId]: {
+        ...statusInteractions[statusId],
+        replies: [
+          ...(statusInteractions[statusId]?.replies || []),
+          newReply
+        ]
+      }
+    };
+
+    saveStatusInteractions(updatedInteractions);
+
     toast({
       title: "Reply Sent! 💬",
       description: `Your reply to ${status.username}'s status has been sent`
     });
   };
 
+  // FIXED: Proper status reaction handling with persistence
+  const handleStatusReact = (statusId, emoji) => {
+    const currentInteractions = statusInteractions[statusId] || {};
+    const currentLikes = currentInteractions.likes || [];
+    
+    // Check if user already liked this status
+    const existingLikeIndex = currentLikes.findIndex(like => like.userId === user.id);
+    
+    let updatedLikes;
+    let actionMessage;
+
+    if (existingLikeIndex !== -1) {
+      // User already liked, so unlike
+      updatedLikes = currentLikes.filter(like => like.userId !== user.id);
+      actionMessage = "Reaction removed";
+    } else {
+      // Add new like
+      const newLike = {
+        userId: user.id,
+        username: user.username,
+        avatar: user.avatar,
+        emoji: emoji,
+        timestamp: new Date().toISOString()
+      };
+      updatedLikes = [...currentLikes, newLike];
+      actionMessage = `Reacted with ${emoji}`;
+    }
+
+    // Update interactions
+    const updatedInteractions = {
+      ...statusInteractions,
+      [statusId]: {
+        ...currentInteractions,
+        likes: updatedLikes
+      }
+    };
+
+    saveStatusInteractions(updatedInteractions);
+
+    toast({
+      title: actionMessage,
+      description: "Your reaction has been saved!"
+    });
+  };
+
+  // FIXED: Proper status share handling with persistence
   const handleStatusShare = (status) => {
+    const statusId = status.id;
+    const shareId = `share-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newShare = {
+      id: shareId,
+      userId: user.id,
+      username: user.username,
+      avatar: user.avatar,
+      timestamp: new Date().toISOString()
+    };
+
+    // Update interactions
+    const updatedInteractions = {
+      ...statusInteractions,
+      [statusId]: {
+        ...statusInteractions[statusId],
+        shares: [
+          ...(statusInteractions[statusId]?.shares || []),
+          newShare
+        ]
+      }
+    };
+
+    saveStatusInteractions(updatedInteractions);
+
+    // Also handle actual sharing
     if (navigator.share) {
       navigator.share({
         title: `${status.username}'s Status`,
@@ -188,6 +313,17 @@ export default function StatusUpdates() {
         description: "Status link copied to clipboard"
       });
     }
+  };
+
+  // Helper function to get interaction counts for a status
+  const getStatusInteractionCounts = (statusId) => {
+    const interactions = statusInteractions[statusId] || {};
+    return {
+      likes: interactions.likes?.length || 0,
+      replies: interactions.replies?.length || 0,
+      shares: interactions.shares?.length || 0,
+      userHasLiked: interactions.likes?.some(like => like.userId === user.id) || false
+    };
   };
 
   const formatTimeRemaining = (expiresAt) => {
@@ -357,109 +493,19 @@ export default function StatusUpdates() {
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">My Status</h3>
           <div className="space-y-3">
-            {userStatuses.map((status, index) => (
-              <motion.div
-                key={status.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={() => handleViewStatus(status)}
-              >
-                {status.type === 'photo' ? (
-                  <div className="w-12 h-12 rounded-lg overflow-hidden">
-                    <img 
-                      src={status.photoUrl} 
-                      alt="Status" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium"
-                    style={{ 
-                      backgroundColor: status.backgroundColor,
-                      color: status.textColor 
-                    }}
-                  >
-                    {status.content.slice(0, 2)}
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{status.content || 'Photo Status'}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      {status.views} views
-                    </span>
-                    <span>Expires in {formatTimeRemaining(status.expiresAt)}</span>
-                  </div>
-                </div>
-                
-                {/* Status Options */}
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-8 h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowStatusOptions(showStatusOptions === status.id ? null : status.id);
-                    }}
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-
-                  {showStatusOptions === status.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg p-1 z-10 min-w-[120px]"
-                    >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-destructive"
-                        onClick={() => handleDeleteStatus(status.id)}
-                      >
-                        <Trash2 className="w-3 h-3 mr-2" />
-                        Delete
-                      </Button>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Status List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Updates</h3>
-        {demoStatuses.map((status, index) => (
-          <motion.div
-            key={status.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-card border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-            onClick={() => handleViewStatus(status)}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-xl border-2 border-primary/30">
-                {status.avatar}
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold text-foreground">{status.username}</h3>
-                  <span className="text-sm text-muted-foreground">{formatTimeAgo(status.timestamp)}</span>
-                </div>
-                
-                <div className="mb-3">
+            {userStatuses.map((status, index) => {
+              const interactionCounts = getStatusInteractionCounts(status.id);
+              return (
+                <motion.div
+                  key={status.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => handleViewStatus(status)}
+                >
                   {status.type === 'photo' ? (
-                    <div className="w-full h-32 rounded-lg overflow-hidden">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden">
                       <img 
                         src={status.photoUrl} 
                         alt="Status" 
@@ -468,30 +514,152 @@ export default function StatusUpdates() {
                     </div>
                   ) : (
                     <div 
-                      className="w-full h-24 rounded-lg flex items-center justify-center p-4"
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium"
                       style={{ 
                         backgroundColor: status.backgroundColor,
                         color: status.textColor 
                       }}
                     >
-                      <p className={`${status.fontSize} font-medium text-center`}>
-                        {status.content}
-                      </p>
+                      {status.content.slice(0, 2)}
                     </div>
                   )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{status.content || 'Photo Status'}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {status.views} views
+                      </span>
+                      {interactionCounts.likes > 0 && (
+                        <span>❤️ {interactionCounts.likes}</span>
+                      )}
+                      {interactionCounts.replies > 0 && (
+                        <span>💬 {interactionCounts.replies}</span>
+                      )}
+                      {interactionCounts.shares > 0 && (
+                        <span>📤 {interactionCounts.shares}</span>
+                      )}
+                      <span>Expires in {formatTimeRemaining(status.expiresAt)}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Status Options */}
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowStatusOptions(showStatusOptions === status.id ? null : status.id);
+                      }}
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+
+                    {showStatusOptions === status.id && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg p-1 z-10 min-w-[120px]"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-destructive"
+                          onClick={() => handleDeleteStatus(status.id)}
+                        >
+                          <Trash2 className="w-3 h-3 mr-2" />
+                          Delete
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Status List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Updates</h3>
+        {demoStatuses.map((status, index) => {
+          const interactionCounts = getStatusInteractionCounts(status.id);
+          return (
+            <motion.div
+              key={status.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-card border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => handleViewStatus(status)}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-xl border-2 border-primary/30">
+                  {status.avatar}
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {status.views} views
-                  </span>
-                  <span>Expires in {formatTimeRemaining(status.expiresAt)}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-foreground">{status.username}</h3>
+                    <span className="text-sm text-muted-foreground">{formatTimeAgo(status.timestamp)}</span>
+                  </div>
+                  
+                  <div className="mb-3">
+                    {status.type === 'photo' ? (
+                      <div className="w-full h-32 rounded-lg overflow-hidden">
+                        <img 
+                          src={status.photoUrl} 
+                          alt="Status" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div 
+                        className="w-full h-24 rounded-lg flex items-center justify-center p-4"
+                        style={{ 
+                          backgroundColor: status.backgroundColor,
+                          color: status.textColor 
+                        }}
+                      >
+                        <p className={`${status.fontSize} font-medium text-center`}>
+                          {status.content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {status.views} views
+                      </span>
+                      {interactionCounts.likes > 0 && (
+                        <span className="flex items-center gap-1">
+                          ❤️ {interactionCounts.likes}
+                        </span>
+                      )}
+                      {interactionCounts.replies > 0 && (
+                        <span className="flex items-center gap-1">
+                          💬 {interactionCounts.replies}
+                        </span>
+                      )}
+                      {interactionCounts.shares > 0 && (
+                        <span className="flex items-center gap-1">
+                          📤 {interactionCounts.shares}
+                        </span>
+                      )}
+                    </div>
+                    <span>Expires in {formatTimeRemaining(status.expiresAt)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Privacy Notice */}
@@ -517,7 +685,7 @@ export default function StatusUpdates() {
         onCreateStatus={handleCreateStatus}
       />
 
-      {/* Status Viewer */}
+      {/* Status Viewer - FIXED: Pass proper handlers */}
       {selectedStatus && (
         <StatusViewer
           status={selectedStatus}
@@ -526,12 +694,7 @@ export default function StatusUpdates() {
             setShowStatusViewer(false);
             setSelectedStatus(null);
           }}
-          onReact={(statusId, emoji) => {
-            toast({
-              title: `Reacted with ${emoji}`,
-              description: "Your reaction has been added!"
-            });
-          }}
+          onReact={(statusId, emoji) => handleStatusReact(statusId, emoji)}
           onReply={handleStatusReply}
           onShare={handleStatusShare}
         />

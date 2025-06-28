@@ -14,15 +14,11 @@ export default function StatusViewer({ status, isOpen, onClose, onReact, onReply
   const reactions = ['❤️', '😂', '😮', '😢', '😡', '👍'];
 
   const handleReaction = (emoji) => {
-    setHasReacted(true);
+    setHasReacted(!hasReacted); // Toggle reaction state
     setShowReactions(false);
     if (onReact) {
       onReact(status.id, emoji);
     }
-    toast({
-      title: `Reacted with ${emoji}`,
-      description: "Your reaction has been added!"
-    });
   };
 
   const handleReply = () => {
@@ -32,10 +28,6 @@ export default function StatusViewer({ status, isOpen, onClose, onReact, onReply
       }
       setReplyText('');
       setShowReplyInput(false);
-      toast({
-        title: "Reply Sent! 💬",
-        description: `Your reply to ${status.username}'s status has been sent`
-      });
     } else {
       setShowReplyInput(true);
     }
@@ -44,34 +36,6 @@ export default function StatusViewer({ status, isOpen, onClose, onReact, onReply
   const handleShare = () => {
     if (onShare) {
       onShare(status);
-    } else {
-      // Fallback share functionality
-      if (navigator.share) {
-        navigator.share({
-          title: `${status.username}'s Status`,
-          text: status.content || 'Check out this status!',
-          url: window.location.href
-        }).then(() => {
-          toast({
-            title: "Status Shared! 📤",
-            description: "Status has been shared successfully"
-          });
-        }).catch(() => {
-          // Fallback to copy link
-          navigator.clipboard.writeText(window.location.href);
-          toast({
-            title: "Link Copied! 📋",
-            description: "Status link copied to clipboard"
-          });
-        });
-      } else {
-        // Fallback to copy link
-        navigator.clipboard.writeText(window.location.href);
-        toast({
-          title: "Link Copied! 📋",
-          description: "Status link copied to clipboard"
-        });
-      }
     }
   };
 
@@ -313,9 +277,6 @@ export default function StatusViewer({ status, isOpen, onClose, onReact, onReply
           </div>
         </div>
       </div>
-
-      {/* CRITICAL FIX: Remove tap areas that were blocking button clicks */}
-      {/* The tap areas were preventing button clicks - removed them */}
     </motion.div>
   );
 }

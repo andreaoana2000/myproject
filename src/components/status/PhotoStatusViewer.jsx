@@ -28,15 +28,11 @@ export default function PhotoStatusViewer({ status, isOpen, onClose, onReact, on
   };
 
   const handleReaction = (emoji) => {
-    setHasReacted(true);
+    setHasReacted(!hasReacted);
     setShowReactions(false);
     if (onReact) {
       onReact(status.id, emoji);
     }
-    toast({
-      title: `Reacted with ${emoji}`,
-      description: "Your reaction has been added!"
-    });
   };
 
   const handleReply = () => {
@@ -46,10 +42,6 @@ export default function PhotoStatusViewer({ status, isOpen, onClose, onReact, on
       }
       setReplyText('');
       setShowReplyInput(false);
-      toast({
-        title: "Reply Sent! 💬",
-        description: `Your reply to ${status.username}'s status has been sent`
-      });
     } else {
       setShowReplyInput(true);
     }
@@ -280,9 +272,6 @@ export default function PhotoStatusViewer({ status, isOpen, onClose, onReact, on
           </div>
         </div>
       </div>
-
-      {/* CRITICAL FIX: Remove tap areas that were blocking button clicks */}
-      {/* The tap areas were preventing button clicks - removed them */}
     </motion.div>
   );
 }
