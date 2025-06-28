@@ -99,11 +99,13 @@ export default function ChannelHeader({
           <Users className="w-4 h-4" />
         </Button>
         
+        {/* FIXED: Info button that opens channel information */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onShowChannelInfo}
           className="transition-all duration-200 hover:bg-accent"
+          title="Channel Information"
         >
           <Info className="w-4 h-4" />
         </Button>
