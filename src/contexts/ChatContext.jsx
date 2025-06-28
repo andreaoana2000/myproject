@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { encryptMessage, decryptMessage } from '@/lib/encryption';
 import { toast } from '@/components/ui/use-toast';
@@ -12,6 +12,8 @@ export function ChatProvider({ children }) {
   const [contacts, setContacts] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
   const [deletingMessages, setDeletingMessages] = useState(new Set());
+  const deleteTimeoutsRef = useRef(new Map()); // Track deletion timeouts
+  const savingRef = useRef(false); // Prevent concurrent saves
 
   useEffect(() => {
     if (user) {
@@ -19,6 +21,14 @@ export function ChatProvider({ children }) {
       loadContacts();
     }
   }, [user]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      deleteTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      deleteTimeoutsRef.current.clear();
+    };
+  }, []);
 
   const loadChats = () => {
     try {
@@ -90,9 +100,19 @@ export function ChatProvider({ children }) {
 
   const saveChats = (updatedChats) => {
     try {
+      // Prevent concurrent saves that could cause race conditions
+      if (savingRef.current) return;
+      savingRef.current = true;
+      
       localStorage.setItem('securechat-chats', JSON.stringify(updatedChats));
+      
+      // Small delay to prevent rapid successive saves
+      setTimeout(() => {
+        savingRef.current = false;
+      }, 50);
     } catch (error) {
       console.error('Error saving chats:', error);
+      savingRef.current = false;
     }
   };
 
@@ -171,6 +191,7 @@ export function ChatProvider({ children }) {
         editHistory: []
       };
 
+      // Update chats state immediately
       const updatedChats = chats.map(c => {
         if (c.id === chatId) {
           return {
@@ -185,23 +206,61 @@ export function ChatProvider({ children }) {
       setChats(updatedChats);
       saveChats(updatedChats);
 
-      // Update activeChat so chat UI updates
+      // Update activeChat immediately
       const updatedActiveChat = updatedChats.find(c => c.id === chatId);
       setActiveChat(updatedActiveChat);
 
-      // Auto-delete message if enabled - but prevent disappearing/reappearing
-      if (message.autoDelete && !deletingMessages.has(messageId)) {
-        setTimeout(() => {
+      // FIXED: Improved auto-delete mechanism
+      if (message.autoDelete) {
+        // Clear any existing timeout for this message
+        if (deleteTimeoutsRef.current.has(messageId)) {
+          clearTimeout(deleteTimeoutsRef.current.get(messageId));
+        }
+
+        // Mark message as being deleted to prevent UI flicker
+        const deleteTimeout = setTimeout(() => {
+          // Mark as deleting first
           setDeletingMessages(prev => new Set(prev).add(messageId));
+          
+          // Small delay to allow UI to show deletion state
           setTimeout(() => {
-            deleteMessage(chatId, messageId);
+            // Actually delete the message
+            setChats(currentChats => {
+              const newChats = currentChats.map(c => {
+                if (c.id === chatId) {
+                  return {
+                    ...c,
+                    messages: (c.messages || []).filter(m => m.id !== messageId)
+                  };
+                }
+                return c;
+              });
+              
+              // Save to localStorage immediately
+              saveChats(newChats);
+              
+              // Update activeChat if it's the current chat
+              if (activeChat && activeChat.id === chatId) {
+                setActiveChat(newChats.find(c => c.id === chatId));
+              }
+              
+              return newChats;
+            });
+            
+            // Clean up deletion tracking
             setDeletingMessages(prev => {
               const newSet = new Set(prev);
               newSet.delete(messageId);
               return newSet;
             });
-          }, 100); // Small delay to prevent flicker
+            
+            // Clean up timeout reference
+            deleteTimeoutsRef.current.delete(messageId);
+          }, 200); // Small delay for smooth UI transition
         }, message.deleteTimer);
+
+        // Store timeout reference
+        deleteTimeoutsRef.current.set(messageId, deleteTimeout);
       }
 
       return message;
@@ -217,6 +276,12 @@ export function ChatProvider({ children }) {
 
   const editMessage = (chatId, messageId, newContent) => {
     if (!chatId || !messageId || !newContent) return;
+
+    // Clear any pending deletion for this message
+    if (deleteTimeoutsRef.current.has(messageId)) {
+      clearTimeout(deleteTimeoutsRef.current.get(messageId));
+      deleteTimeoutsRef.current.delete(messageId);
+    }
 
     const updatedChats = chats.map(c => {
       if (c.id === chatId) {
@@ -258,6 +323,19 @@ export function ChatProvider({ children }) {
 
   const deleteMessage = (chatId, messageId) => {
     if (!chatId || !messageId) return;
+
+    // Clear any pending deletion timeout
+    if (deleteTimeoutsRef.current.has(messageId)) {
+      clearTimeout(deleteTimeoutsRef.current.get(messageId));
+      deleteTimeoutsRef.current.delete(messageId);
+    }
+
+    // Remove from deleting set
+    setDeletingMessages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(messageId);
+      return newSet;
+    });
 
     const updatedChats = chats.map(c => {
       if (c.id === chatId) {
@@ -355,6 +433,18 @@ export function ChatProvider({ children }) {
   const deleteContact = (contactId) => {
     if (!contactId) return;
 
+    // Clear any timeouts for chats with this contact
+    chats.forEach(chat => {
+      if (chat.participants && chat.participants.includes(contactId)) {
+        chat.messages?.forEach(message => {
+          if (deleteTimeoutsRef.current.has(message.id)) {
+            clearTimeout(deleteTimeoutsRef.current.get(message.id));
+            deleteTimeoutsRef.current.delete(message.id);
+          }
+        });
+      }
+    });
+
     const updatedContacts = contacts.filter(contact => contact.id !== contactId);
     saveContacts(updatedContacts);
     
@@ -392,6 +482,7 @@ export function ChatProvider({ children }) {
       activeChat,
       contacts,
       typingUsers,
+      deletingMessages,
       setActiveChat,
       setContacts: saveContacts,
       createChat,
