@@ -629,6 +629,22 @@ export default function ChannelView({ channel, onBack }) {
     });
   };
 
+  // CRITICAL FIX: Enhanced message options handler
+  const handleShowMessageOptions = (message) => {
+    console.log('=== MESSAGE OPTIONS HANDLER ===');
+    console.log('Message:', message);
+    console.log('Message ID:', message.id);
+    console.log('Message Content:', message.content);
+    
+    toast({
+      title: "🎯 Message Options Opened!",
+      description: `Options for: "${message.content?.substring(0, 30)}..."`
+    });
+    
+    // Here you could open a modal, dropdown, or other UI element
+    // For now, we'll just show the toast to confirm it's working
+  };
+
   const filteredMessages = searchQuery 
     ? messages.filter(msg => 
         msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -772,13 +788,7 @@ export default function ChannelView({ channel, onBack }) {
                     onPin={() => handlePinMessage(message.id)}
                     onDelete={() => handleDeleteMessage(message.id)}
                     showPin={true}
-                    onShowOptions={(msg) => {
-                      console.log('Message options requested for:', msg.id);
-                      toast({
-                        title: "Message Options",
-                        description: "Message options menu opened"
-                      });
-                    }}
+                    onShowOptions={handleShowMessageOptions}
                   />
                 </motion.div>
               ))}

@@ -173,6 +173,41 @@ export default function MessageBubble({
     }
   };
 
+  // CRITICAL FIX: Enhanced menu button handler with comprehensive debugging
+  const handleMenuClick = (e) => {
+    // Stop all event propagation immediately
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    console.log('=== MENU BUTTON CLICKED ===');
+    console.log('Event:', e);
+    console.log('Message ID:', message.id);
+    console.log('onShowOptions available:', !!onShowOptions);
+    console.log('onShowOptions type:', typeof onShowOptions);
+    
+    // Always show a toast to confirm the click worked
+    toast({
+      title: "🎯 Menu Button Clicked!",
+      description: `Menu for message: ${message.content?.substring(0, 30)}...`
+    });
+    
+    // Try to call the options handler
+    if (onShowOptions && typeof onShowOptions === 'function') {
+      console.log('Calling onShowOptions...');
+      try {
+        onShowOptions(message);
+        console.log('onShowOptions called successfully');
+      } catch (error) {
+        console.error('Error calling onShowOptions:', error);
+      }
+    } else {
+      console.log('onShowOptions not available or not a function');
+    }
+    
+    console.log('=== MENU BUTTON CLICK END ===');
+  };
+
   // CRITICAL FIX: Direct emoji characters without any conversion
   const emojiReactions = {
     heart: '❤️',
@@ -543,24 +578,26 @@ export default function MessageBubble({
                 <Trash2 className="w-3 h-3" />
               </Button>
             )}
-            {/* CRITICAL FIX: Enhanced menu button with proper event handling */}
+            {/* CRITICAL FIX: Enhanced menu button with comprehensive debugging */}
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-              onClick={(e) => {
+              className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200 border-2 border-transparent hover:border-primary/30"
+              onClick={handleMenuClick}
+              onMouseDown={(e) => {
+                console.log('Menu button mouse down');
                 e.preventDefault();
-                e.stopPropagation();
-                console.log('Menu button clicked, onShowOptions:', !!onShowOptions);
-                if (onShowOptions) {
-                  onShowOptions(message);
-                } else {
-                  toast({
-                    title: "Message Options",
-                    description: "Message options menu opened"
-                  });
-                }
               }}
+              onMouseUp={(e) => {
+                console.log('Menu button mouse up');
+                e.preventDefault();
+              }}
+              style={{ 
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+                zIndex: 100
+              }}
+              title="Message Options"
             >
               <MoreHorizontal className="w-3 h-3" />
             </Button>
