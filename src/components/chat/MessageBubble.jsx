@@ -173,12 +173,11 @@ export default function MessageBubble({
     }
   };
 
-  // CRITICAL FIX: Enhanced menu button handler with comprehensive debugging
+  // CRITICAL FIX: Remove stopImmediatePropagation as it's not available on React synthetic events
   const handleMenuClick = (e) => {
-    // Stop all event propagation immediately
+    // Stop all event propagation
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
     
     console.log('=== MENU BUTTON CLICKED ===');
     console.log('Event:', e);
