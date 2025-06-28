@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -12,7 +11,8 @@ import {
   Bell,
   BellOff,
   Volume2,
-  VolumeX
+  VolumeX,
+  Info
 } from 'lucide-react';
 
 export default function ChannelHeader({ 
@@ -26,7 +26,8 @@ export default function ChannelHeader({
   onToggleSearch,
   onToggleNotifications,
   onToggleMute,
-  onToggleMembers
+  onToggleMembers,
+  onShowChannelInfo
 }) {
   return (
     <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4">
@@ -96,6 +97,15 @@ export default function ChannelHeader({
           className="transition-all duration-200 hover:bg-accent"
         >
           <Users className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onShowChannelInfo}
+          className="transition-all duration-200 hover:bg-accent"
+        >
+          <Info className="w-4 h-4" />
         </Button>
         
         <Button
