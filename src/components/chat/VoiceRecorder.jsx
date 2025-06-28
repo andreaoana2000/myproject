@@ -10,6 +10,7 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [microphoneAvailable, setMicrophoneAvailable] = useState(true);
   
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -19,13 +20,18 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
   const analyserRef = useRef(null);
   const audioRef = useRef(null);
 
+  // Check microphone availability on component mount
+  useEffect(() => {
+    checkMicrophoneAvailability();
+  }, []);
+
   // CRITICAL FIX: Reset timer when recording starts
   useEffect(() => {
-    if (isRecording && !recordedBlob) {
+    if (isRecording && !recordedBlob && microphoneAvailable) {
       setRecordingTime(0);
       startRecording();
     }
-  }, [isRecording]);
+  }, [isRecording, microphoneAvailable]);
 
   useEffect(() => {
     return () => {
@@ -41,8 +47,53 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
     };
   }, []);
 
+  const checkMicrophoneAvailability = async () => {
+    try {
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicrophoneAvailable(false);
+        return;
+      }
+
+      // Check if any audio input devices are available
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+      
+      if (audioInputDevices.length === 0) {
+        setMicrophoneAvailable(false);
+        return;
+      }
+
+      // Test microphone access
+      try {
+        const testStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        
+        // If we get here, microphone is available
+        testStream.getTracks().forEach(track => track.stop());
+        setMicrophoneAvailable(true);
+      } catch (testError) {
+        console.warn('Microphone test failed:', testError);
+        setMicrophoneAvailable(false);
+      }
+    } catch (error) {
+      console.warn('Error checking microphone availability:', error);
+      setMicrophoneAvailable(false);
+    }
+  };
+
   const startRecording = async () => {
     try {
+      // Double-check microphone availability before starting
+      if (!microphoneAvailable) {
+        throw new Error('No microphone available');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -115,11 +166,37 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
 
     } catch (error) {
       console.error('Recording start error:', error);
+      
+      // Provide specific error messages based on the error type
+      let errorMessage = "Unable to start recording";
+      let errorDescription = "Please check your microphone settings";
+
+      if (error.name === 'NotFoundError' || error.message.includes('Requested device not found')) {
+        errorMessage = "Microphone Not Found";
+        errorDescription = "No microphone device was detected. Please connect a microphone and try again.";
+        setMicrophoneAvailable(false);
+      } else if (error.name === 'NotAllowedError') {
+        errorMessage = "Microphone Access Denied";
+        errorDescription = "Please allow microphone access in your browser settings and try again.";
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = "Microphone In Use";
+        errorDescription = "Your microphone is being used by another application. Please close other apps and try again.";
+      } else if (error.message.includes('No microphone available')) {
+        errorMessage = "No Microphone Available";
+        errorDescription = "Please connect a microphone device to record voice messages.";
+        setMicrophoneAvailable(false);
+      }
+
       toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to record voice messages",
+        title: errorMessage,
+        description: errorDescription,
         variant: "destructive"
       });
+
+      // Reset recording state on error
+      if (onStopRecording) {
+        onStopRecording(null);
+      }
     }
   };
 
@@ -213,6 +290,22 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
     }
   };
 
+  const handleRecordClick = async () => {
+    // Re-check microphone availability when user clicks record
+    await checkMicrophoneAvailability();
+    
+    if (!microphoneAvailable) {
+      toast({
+        title: "No Microphone Available",
+        description: "Please connect a microphone device to record voice messages.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    onStartRecording();
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -226,9 +319,11 @@ export default function VoiceRecorder({ isRecording, onStartRecording, onStopRec
         type="button"
         variant="ghost"
         size="icon"
-        onClick={onStartRecording}
+        onClick={handleRecordClick}
+        disabled={!microphoneAvailable}
+        title={!microphoneAvailable ? "No microphone available" : "Record voice message"}
       >
-        <Mic className="w-4 h-4" />
+        <Mic className={`w-4 h-4 ${!microphoneAvailable ? 'opacity-50' : ''}`} />
       </Button>
     );
   }
