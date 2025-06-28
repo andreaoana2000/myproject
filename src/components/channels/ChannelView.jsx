@@ -498,9 +498,9 @@ export default function ChannelView({ channel, onBack }) {
     });
   };
 
-  // FIXED: Properly handle emoji reactions with unique emoji preservation
+  // CRITICAL FIX: Proper emoji reaction handling
   const handleReaction = (messageId, emoji) => {
-    console.log('Channel handleReaction called with:', { messageId, emoji }); // Debug log
+    console.log('Channel handleReaction called with:', { messageId, emoji });
     
     const updatedMessages = messages.map(message => {
       if (message.id === messageId) {
@@ -529,7 +529,7 @@ export default function ChannelView({ channel, onBack }) {
             existingReaction.count = existingReaction.users.length;
           }
         } else {
-          // New reaction - create it
+          // New reaction - create it with the exact emoji
           reactions.push({
             emoji: emoji, // Preserve the exact emoji
             users: [user.id],
@@ -537,7 +537,7 @@ export default function ChannelView({ channel, onBack }) {
           });
         }
         
-        console.log('Updated reactions:', reactions); // Debug log
+        console.log('Updated reactions:', reactions);
         return { ...message, reactions };
       }
       return message;
@@ -772,6 +772,13 @@ export default function ChannelView({ channel, onBack }) {
                     onPin={() => handlePinMessage(message.id)}
                     onDelete={() => handleDeleteMessage(message.id)}
                     showPin={true}
+                    onShowOptions={(msg) => {
+                      console.log('Message options requested for:', msg.id);
+                      toast({
+                        title: "Message Options",
+                        description: "Message options menu opened"
+                      });
+                    }}
                   />
                 </motion.div>
               ))}

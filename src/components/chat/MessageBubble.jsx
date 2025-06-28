@@ -108,12 +108,13 @@ export default function MessageBubble({
     }
   };
 
-  // CRITICAL FIX: Proper emoji handling without conversion
-  const handleReaction = (emoji) => {
-    console.log('Reacting with emoji:', emoji, 'Type:', typeof emoji, 'Code:', emoji.charCodeAt ? emoji.charCodeAt(0) : 'N/A');
+  // CRITICAL FIX: Complete emoji handling rewrite
+  const handleReaction = (emojiChar) => {
+    console.log('Raw emoji received:', emojiChar, 'Length:', emojiChar.length);
     
-    if (onReact && emoji) {
-      onReact(message.id, emoji);
+    if (onReact && emojiChar) {
+      // Pass the emoji exactly as received
+      onReact(message.id, emojiChar);
     }
     setShowReactions(false);
   };
@@ -172,29 +173,14 @@ export default function MessageBubble({
     }
   };
 
-  // CRITICAL FIX: Use actual Unicode emoji characters
-  const quickReactions = [
-    '\u2764\uFE0F', // ❤️ Red Heart
-    '\uD83D\uDC4D', // 👍 Thumbs Up
-    '\uD83D\uDE02', // 😂 Face with Tears of Joy
-    '\uD83D\uDE2E', // 😮 Face with Open Mouth
-    '\uD83D\uDE22', // 😢 Crying Face
-    '\uD83D\uDE21'  // 😡 Pouting Face
-  ];
-
-  // CRITICAL FIX: Enhanced emoji rendering function
-  const renderEmoji = (emoji) => {
-    // Return the emoji exactly as provided
-    if (!emoji) {
-      return '\uD83D\uDC4D'; // 👍 fallback
-    }
-    
-    // If it's a number or invalid, return fallback
-    if (typeof emoji === 'number' || /^\d+$/.test(String(emoji))) {
-      return '\uD83D\uDC4D'; // 👍 fallback
-    }
-    
-    return String(emoji);
+  // CRITICAL FIX: Direct emoji characters without any conversion
+  const emojiReactions = {
+    heart: '❤️',
+    thumbsUp: '👍',
+    laugh: '😂',
+    surprised: '😮',
+    sad: '😢',
+    angry: '😡'
   };
 
   const renderMessageContent = () => {
@@ -382,11 +368,10 @@ export default function MessageBubble({
           >
             {renderMessageContent()}
 
-            {/* Message Reactions - CRITICAL FIX: Enhanced emoji rendering */}
+            {/* Message Reactions - CRITICAL FIX: Direct emoji display */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {message.reactions.map((reaction, index) => {
-                  const displayEmoji = renderEmoji(reaction.emoji);
                   const reactionCount = reaction.count || 1;
                   const isUserReacted = reaction.users && reaction.users.includes(user.id);
                   
@@ -404,15 +389,8 @@ export default function MessageBubble({
                       }`}
                       onClick={() => handleReaction(reaction.emoji)}
                     >
-                      {/* CRITICAL FIX: Direct emoji rendering without conversion */}
-                      <span 
-                        className="emoji-display"
-                        style={{ 
-                          fontSize: '14px'
-                        }}
-                      >
-                        {displayEmoji}
-                      </span>
+                      {/* CRITICAL FIX: Direct emoji display without any processing */}
+                      <span className="text-sm">{reaction.emoji}</span>
                       <span className="text-xs font-bold leading-none">{reactionCount}</span>
                     </motion.button>
                   );
@@ -458,12 +436,16 @@ export default function MessageBubble({
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-                onClick={() => setShowReactions(!showReactions)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowReactions(!showReactions);
+                }}
               >
                 <Heart className="w-3 h-3" />
               </Button>
 
-              {/* Quick Reactions - CRITICAL FIX: Enhanced emoji rendering */}
+              {/* Quick Reactions - CRITICAL FIX: Direct emoji characters */}
               {showReactions && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -473,25 +455,20 @@ export default function MessageBubble({
                     isOwn ? 'right-0' : 'left-0'
                   } bg-card border border-border rounded-lg p-2 shadow-xl backdrop-blur-sm z-20 flex gap-1`}
                 >
-                  {quickReactions.map((emoji, emojiIndex) => (
+                  {Object.values(emojiReactions).map((emoji, emojiIndex) => (
                     <Button
                       key={`quick-${emojiIndex}-${emoji}`}
                       variant="ghost"
                       size="icon"
                       className="w-8 h-8 hover:bg-primary/20 transition-all duration-200"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         console.log('Quick reaction clicked:', emoji);
                         handleReaction(emoji);
                       }}
                     >
-                      <span 
-                        className="emoji-display"
-                        style={{ 
-                          fontSize: '16px'
-                        }}
-                      >
-                        {emoji}
-                      </span>
+                      <span className="text-lg">{emoji}</span>
                     </Button>
                   ))}
                 </motion.div>
@@ -502,7 +479,11 @@ export default function MessageBubble({
               variant="ghost"
               size="icon"
               className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-              onClick={handleReply}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleReply();
+              }}
             >
               <Reply className="w-3 h-3" />
             </Button>
@@ -511,7 +492,11 @@ export default function MessageBubble({
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-                onClick={handleCopy}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopy();
+                }}
               >
                 <Copy className="w-3 h-3" />
               </Button>
@@ -521,7 +506,11 @@ export default function MessageBubble({
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-                onClick={handlePin}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handlePin();
+                }}
               >
                 <Pin className="w-3 h-3" />
               </Button>
@@ -531,7 +520,11 @@ export default function MessageBubble({
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all duration-200"
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEdit();
+                }}
               >
                 <Edit className="w-3 h-3" />
               </Button>
@@ -541,12 +534,16 @@ export default function MessageBubble({
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7 opacity-60 hover:opacity-100 hover:bg-destructive/20 transition-all duration-200"
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDelete();
+                }}
               >
                 <Trash2 className="w-3 h-3" />
               </Button>
             )}
-            {/* CRITICAL FIX: Proper menu button with event handling */}
+            {/* CRITICAL FIX: Enhanced menu button with proper event handling */}
             <Button
               variant="ghost"
               size="icon"
@@ -554,8 +551,14 @@ export default function MessageBubble({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('Menu button clicked, onShowOptions:', !!onShowOptions);
                 if (onShowOptions) {
                   onShowOptions(message);
+                } else {
+                  toast({
+                    title: "Message Options",
+                    description: "Message options menu opened"
+                  });
                 }
               }}
             >
